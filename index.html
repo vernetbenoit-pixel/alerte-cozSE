@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COZ Sud-Est | Mobilisation des SPVE et Réserves BMC</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
@@ -14,84 +15,30 @@
             --white: #ffffff;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-grey);
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-
-        header {
-            background-color: var(--navy-blue);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light-grey); margin: 0; padding: 0; color: #333; }
+        header { background-color: var(--navy-blue); color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .header-logo { display: flex; align-items: center; }
         header img { height: 60px; margin-right: 15px; }
         header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
 
+        /* --- NOUVEAU : Écran de connexion --- */
+        #login-screen {
+            max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border-top: 8px solid var(--navy-blue);
+        }
+        #login-screen input { width: 90%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; }
+        .btn-login { background-color: var(--navy-blue); color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-login:hover { background-color: #11185b; }
+
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-
-        /* Alerte */
-        .alert-card {
-            background: var(--white);
-            border-radius: 10px;
-            padding: 25px;
-            text-align: center;
-            border-top: 8px solid #25D366; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
+        .alert-card { background: var(--white); border-radius: 10px; padding: 25px; text-align: center; border-top: 8px solid #25D366; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .alert-card h2 { margin-top: 0; color: #128C7E; letter-spacing: 1px; }
-
-        input[type="text"] {
-            width: 70%;
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            outline: none;
-        }
-
-        .btn-bip {
-            background-color: #25D366; 
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
+        .alert-card input[type="text"] { width: 70%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 15px; outline: none; }
+        
+        .btn-bip { background-color: #25D366; color: white; padding: 15px 40px; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-bip:hover { background-color: #128C7E; transform: scale(1.02); }
 
-        /* Indicateurs */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .stat-box {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-bottom: 4px solid #ddd;
-        }
-
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-box { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-bottom: 4px solid #ddd; }
         .stat-box h3 { margin: 0; font-size: 38px; }
         .stat-box p { margin: 5px 0 0 0; font-weight: bold; font-size: 13px; color: #555; }
 
@@ -102,55 +49,27 @@
         .tplus3h { color: #d84315; border-color: #d84315; }
         .indispo { color: #c62828; border-color: #c62828; }
 
-        /* Tableau */
-        .table-container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
+        .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background-color: var(--navy-blue); color: white; font-size: 12px; text-transform: uppercase; }
 
-        .btn-delete {
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            padding: 8px 15px;
-            border: 1px solid white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: 0.3s;
-        }
+        .btn-delete { background-color: rgba(255,255,255,0.2); color: white; padding: 8px 15px; border: 1px solid white; border-radius: 4px; cursor: pointer; font-size: 12px; transition: 0.3s; }
         .btn-delete:hover { background-color: white; color: var(--navy-blue); }
-
-        /* Bouton de confirmation équipage */
-        .btn-confirm {
-            background-color: var(--navy-blue);
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        .btn-confirm:hover { background-color: #11185b; }
-        .badge-retenu {
-            background-color: #2e7d32;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 12px;
-            display: inline-block;
-        }
-
+        
+        .btn-confirm { background-color: var(--navy-blue); color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .badge-retenu { background-color: #2e7d32; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
     </style>
 </head>
 <body>
+
+<div id="login-screen">
+    <img src="icon.png" alt="Logo" height="80" style="margin-bottom: 15px;">
+    <h2 style="color: var(--navy-blue); margin-top: 0;">🔒 Accès COZ Restreint</h2>
+    <input type="email" id="email" placeholder="Adresse e-mail">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button class="btn-login" onclick="seConnecter()">S'IDENTIFIER</button>
+</div>
 
 <div id="app-content" style="display:none;">
     <header>
@@ -158,7 +77,10 @@
             <img src="icon.png" alt="Logo Sud-Est">
             <h1>COZ Sud-Est | Mobilisation des SPVE et Réserves BMC</h1>
         </div>
-        <button class="btn-delete" onclick="resetDonnees()">RAZ BASE DE DONNÉES</button>
+        <div>
+            <button class="btn-delete" onclick="resetDonnees()" style="margin-right: 10px;">RAZ BASE DE DONNÉES</button>
+            <button class="btn-delete" onclick="seDeconnecter()">DÉCONNEXION</button>
+        </div>
     </header>
 
     <div class="container">
@@ -196,16 +118,7 @@
 </div>
 
 <script>
-    // --- SÉCURITÉ ---
-    let mdp = prompt("Code d'accès Chef de Garde :");
-    if (mdp === "18") {
-        document.getElementById('app-content').style.display = 'block';
-    } else {
-        alert("Accès refusé");
-        window.stop();
-    }
-
-    // --- FIREBASE ---
+    // --- CONFIGURATION FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyD3Ris9pwHSnvpXGSgIDIUztC05Apg47jU",
         authDomain: "alerte-spve-coz-se.firebaseapp.com",
@@ -218,54 +131,78 @@
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    const auth = firebase.auth(); // On active l'outil de connexion
 
-    // --- LOGIQUE DE CALCUL ET AFFICHAGE ---
-    database.ref('reponses').on('value', function(snapshot) {
-        const tbody = document.getElementById('journal-reponses');
-        tbody.innerHTML = "";
-        
-        let c = { imm: 0, t1h: 0, t2h: 0, t3h: 0, tplus3h: 0, ind: 0 };
-
-        snapshot.forEach(function(child) {
-            let data = child.val();
-            let key = child.key; 
-            
-            // MODIFICATION ICI : On compte "Immédiat" ET "Immédiate" pour éviter le bug des anciennes données
-            if (data.statut === "Immédiat" || data.statut === "Immédiate") c.imm++;
-            else if (data.statut === "T+1h") c.t1h++;
-            else if (data.statut === "T+2h") c.t2h++;
-            else if (data.statut === "T+3h") c.t3h++;
-            else if (data.statut === "T>3h") c.tplus3h++;
-            else if (data.statut === "Indisponible") c.ind++;
-
-            let actionHtml = "";
-            if (data.confirme) {
-                actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
-            } else if (data.statut !== "Indisponible") {
-                actionHtml = `<button class="btn-confirm" onclick="confirmerPompier('${key}', \`${data.nom}\`)">Confirmer le départ</button>`;
-            } else {
-                actionHtml = `<span style="color:#aaa;">-</span>`;
-            }
-
-            let row = `<tr>
-                <td>${data.heure}</td>
-                <td><strong>${data.nom}</strong></td>
-                <td style="color:${getColor(data.statut)}; font-weight:bold;">${data.statut}</td>
-                <td>${actionHtml}</td>
-            </tr>`;
-            tbody.innerHTML = row + tbody.innerHTML;
-        });
-
-        // Mise à jour des chiffres
-        document.getElementById('count-immediat').innerText = c.imm;
-        document.getElementById('count-t1h').innerText = c.t1h;
-        document.getElementById('count-t2h').innerText = c.t2h;
-        document.getElementById('count-t3h').innerText = c.t3h;
-        document.getElementById('count-tplus3h').innerText = c.tplus3h;
-        document.getElementById('count-indispo').innerText = c.ind;
+    // --- SYSTÈME D'AUTHENTIFICATION ---
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Utilisateur connecté : on affiche le tableau de bord et on charge les données
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            chargerDonnees();
+        } else {
+            // Utilisateur déconnecté : on bloque tout
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('app-content').style.display = 'none';
+        }
     });
 
-    // Couleur des statuts (corrigé pour l'ancienne orthographe aussi)
+    function seConnecter() {
+        let email = document.getElementById('email').value;
+        let password = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, password)
+            .catch((error) => alert("Erreur d'identification : Vérifiez votre e-mail et mot de passe."));
+    }
+
+    function seDeconnecter() {
+        auth.signOut();
+    }
+
+    // --- CHARGEMENT DES DONNÉES (Protégé) ---
+    function chargerDonnees() {
+        database.ref('reponses').on('value', function(snapshot) {
+            const tbody = document.getElementById('journal-reponses');
+            tbody.innerHTML = "";
+            let c = { imm: 0, t1h: 0, t2h: 0, t3h: 0, tplus3h: 0, ind: 0 };
+
+            snapshot.forEach(function(child) {
+                let data = child.val();
+                let key = child.key; 
+                
+                if (data.statut === "Immédiat" || data.statut === "Immédiate") c.imm++;
+                else if (data.statut === "T+1h") c.t1h++;
+                else if (data.statut === "T+2h") c.t2h++;
+                else if (data.statut === "T+3h") c.t3h++;
+                else if (data.statut === "T>3h") c.tplus3h++;
+                else if (data.statut === "Indisponible") c.ind++;
+
+                let actionHtml = "";
+                if (data.confirme) {
+                    actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
+                } else if (data.statut !== "Indisponible") {
+                    actionHtml = `<button class="btn-confirm" onclick="confirmerPompier('${key}', \`${data.nom}\`)">Confirmer le départ</button>`;
+                } else {
+                    actionHtml = `<span style="color:#aaa;">-</span>`;
+                }
+
+                let row = `<tr>
+                    <td>${data.heure}</td>
+                    <td><strong>${data.nom}</strong></td>
+                    <td style="color:${getColor(data.statut)}; font-weight:bold;">${data.statut}</td>
+                    <td>${actionHtml}</td>
+                </tr>`;
+                tbody.innerHTML = row + tbody.innerHTML;
+            });
+
+            document.getElementById('count-immediat').innerText = c.imm;
+            document.getElementById('count-t1h').innerText = c.t1h;
+            document.getElementById('count-t2h').innerText = c.t2h;
+            document.getElementById('count-t3h').innerText = c.t3h;
+            document.getElementById('count-tplus3h').innerText = c.tplus3h;
+            document.getElementById('count-indispo').innerText = c.ind;
+        });
+    }
+
     function getColor(s) {
         if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
         if (s === "T+1h") return "#827717";
@@ -276,20 +213,17 @@
         return "#333"; 
     }
 
-    // --- FONCTION DE CONFIRMATION INDIVIDUELLE (MODIFIÉE) ---
+    // --- FONCTIONS D'ALERTE ET D'ACTION (Protégées) ---
     function confirmerPompier(clef, nom) {
         database.ref('reponses/' + clef).update({ confirme: true })
         .then(() => {
-            // MODIFICATION ICI : Le nouveau message avec les émojis d'urgence
             let texteMessage = `🚨🚑 *URGENCE - CONFIRMATION DE MOBILISATION* 🚒🚨\n\n*${nom}*, votre présence a été retenue.\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨`;
             let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
-            
             window.open(lienWhatsApp, '_blank');
         })
-        .catch(err => alert("Erreur de confirmation : " + err));
+        .catch(err => alert("Erreur d'accès !"));
     }
 
-    // --- FONCTION ALERTE GÉNÉRALE WHATSAPP ---
     function envoyerAlerte() {
         let motif = document.getElementById('motif-alerte').value;
         if(!motif) return alert("Saisissez un motif !");
@@ -298,23 +232,21 @@
             motif: motif,
             timestamp: Date.now()
         }).then(() => {
-            
-            // VOICI LA NOUVELLE LIGNE AVEC GITHUB 👇
             let lienNetlify = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html";
             let texteMessage = `🚨 *ALERTE MOBILISATION* 🚨\n\n*Motif :* ${motif}\n\n👉 *Indiquez votre disponibilité en cliquant ici :*\n${lienNetlify}`;
             let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
             
             window.open(lienWhatsApp, '_blank');
             document.getElementById('motif-alerte').value = "";
-        }).catch(err => alert("Erreur : " + err));
+        }).catch(err => alert("Erreur d'accès !"));
     }
 
-    // --- REMISE À ZÉRO ---
     function resetDonnees() {
         if (confirm("⚠️ Confirmer la remise à zéro de la garde ?")) {
-            database.ref('reponses').remove();
-            database.ref('alertes').remove();
-            location.reload();
+            database.ref('reponses').remove()
+            .then(() => database.ref('alertes').remove())
+            .then(() => alert("Base purgée avec succès !"))
+            .catch(() => alert("Erreur d'accès !"));
         }
     }
 </script>
