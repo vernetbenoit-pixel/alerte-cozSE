@@ -176,6 +176,10 @@
                 else if (data.statut === "T>3h") c.tplus3h++;
                 else if (data.statut === "Indisponible") c.ind++;
 
+                // NOUVEAU : Le style vert et souligné si le pompier a acquitté
+                let styleNom = data.acquitte ? "color: #2e7d32; text-decoration: underline; font-weight: bold;" : "font-weight: bold;";
+                let texteConfirme = data.acquitte ? "<br><span style='color:#2e7d32; font-size: 13px;'>✅ Départ confirmé</span>" : "";
+
                 let actionHtml = "";
                 if (data.confirme) {
                     actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
@@ -187,7 +191,7 @@
 
                 let row = `<tr>
                     <td>${data.heure}</td>
-                    <td><strong>${data.nom}</strong></td>
+                    <td><span style="${styleNom}">${data.nom}</span>${texteConfirme}</td>
                     <td style="color:${getColor(data.statut)}; font-weight:bold;">${data.statut}</td>
                     <td>${actionHtml}</td>
                 </tr>`;
@@ -217,7 +221,10 @@
     function confirmerPompier(clef, nom) {
         database.ref('reponses/' + clef).update({ confirme: true })
         .then(() => {
-            let texteMessage = `🚨🚑 *URGENCE - CONFIRMATION DE MOBILISATION* 🚒🚨\n\n*${nom}*, votre présence a été retenue.\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨`;
+            // NOUVEAU : Création d'un lien unique pour l'acquittement
+            let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
+            
+            let texteMessage = `🚨🚑 *URGENCE - CONFIRMATION DE MOBILISATION* 🚒🚨\n\n*${nom}*, votre présence a été retenue.\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ SUR LE LIEN CI-DESSOUS POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
             let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
         })
