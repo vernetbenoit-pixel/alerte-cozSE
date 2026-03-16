@@ -59,6 +59,10 @@
         
         .btn-confirm { background-color: var(--navy-blue); color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .badge-retenu { background-color: #2e7d32; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
+        /* Bouton et badge pour la relève */
+        .btn-releve { background-color: #f57c00; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-releve:hover { background-color: #e65100; }
+        .badge-releve { background-color: #f57c00; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -176,15 +180,25 @@
                 else if (data.statut === "T>3h") c.tplus3h++;
                 else if (data.statut === "Indisponible") c.ind++;
 
-                // NOUVEAU : Le style vert et souligné si le pompier a acquitté
+                // Le style vert et souligné si le pompier a acquitté
                 let styleNom = data.acquitte ? "color: #2e7d32; text-decoration: underline; font-weight: bold;" : "font-weight: bold;";
                 let texteConfirme = data.acquitte ? "<br><span style='color:#2e7d32; font-size: 13px;'>✅ Départ confirmé</span>" : "";
 
+                // NOUVEAU : Gestion des deux boutons (Départ immédiat et Relève)
                 let actionHtml = "";
                 if (data.confirme) {
-                    actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
+                    if (data.type_depart === "releve") {
+                        actionHtml = `<span class="badge-releve">🔄 Relève Retenue</span>`;
+                    } else {
+                        actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
+                    }
                 } else if (data.statut !== "Indisponible") {
-                    actionHtml = `<button class="btn-confirm" onclick="confirmerPompier('${key}', \`${data.nom}\`)">Confirmer le départ</button>`;
+                    actionHtml = `
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-confirm" onclick="confirmerPompier('${key}', \`${data.nom}\`)">Confirmer départ</button>
+                            <button class="btn-releve" onclick="demanderReleve('${key}', \`${data.nom}\`)">Demander Relève</button>
+                        </div>
+                    `;
                 } else {
                     actionHtml = `<span style="color:#aaa;">-</span>`;
                 }
@@ -207,6 +221,22 @@
         });
     }
 
+    // --- NOUVELLE FONCTION : DEMANDE DE RELÈVE ---
+    function demanderReleve(clef, nom) {
+        // On enregistre que c'est une relève dans la base de données
+        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
+        .then(() => {
+            let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
+            
+            // Message spécifique WhatsApp pour la relève avec émojis oranges 
+            let texteMessage = `🚨🔄 *DEMANDE DE RELÈVE* 🔄🚨\n\n🟠 *${nom}*, le commandement sollicite votre présence pour effectuer une relève.\n\n👉 *Êtes-vous toujours disponible pour vous rendre au COZ ?*\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER VOTRE DÉPART :*\n${lienAck}`;
+            
+            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
+            window.open(lienWhatsApp, '_blank');
+        })
+        .catch(err => alert("Erreur d'accès !"));
+    }
+
     function getColor(s) {
         if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
         if (s === "T+1h") return "#827717";
@@ -221,10 +251,11 @@
     function confirmerPompier(clef, nom) {
         database.ref('reponses/' + clef).update({ confirme: true })
         .then(() => {
-            // NOUVEAU : Création d'un lien unique pour l'acquittement
             let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
             
-            let texteMessage = `🚨🚑 *URGENCE - CONFIRMATION DE MOBILISATION* 🚒🚨\n\n*${nom}*, votre présence a été retenue.\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ SUR LE LIEN CI-DESSOUS POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
+            // Nouveau message de confirmation ultra-visuel
+            let texteMessage = `🚨🚒 *CONFIRMATION DE DÉPART* 🚒🚨\n\n🟢 *${nom}*, votre présence est validée par le commandement.\n\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
+            
             let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
         })
@@ -240,9 +271,11 @@
             timestamp: Date.now()
         }).then(() => {
             let lienNetlify = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html";
-            let texteMessage = `🚨 *ALERTE MOBILISATION* 🚨\n\n*Motif :* ${motif}\n\n👉 *Indiquez votre disponibilité en cliquant ici :*\n${lienNetlify}`;
-            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
             
+            // Nouveau message d'alerte générale avec gyrophares
+            let texteMessage = `🚨🔴 *ALERTE MOBILISATION IMMÉDIATE* 🔴🚨\n\n⚠️ *MOTIF :* ${motif}\n\n👉 *INDIQUEZ VOTRE DISPONIBILITÉ EN CLIQUANT ICI :*\n${lienNetlify}`;
+            
+            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
             document.getElementById('motif-alerte').value = "";
         }).catch(err => alert("Erreur d'accès !"));
