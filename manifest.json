@@ -1,0 +1,20 @@
+{
+  "name": "Alerte Sapeurs-Pompiers",
+  "short_name": "Alerte SP",
+  "start_url": "./pompier.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#dc3545",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COZ Sud-Est | Mobilisation des SPVE et Réserves BMC</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --pompier-red: #d32f2f;
+            --navy-blue: #1a237e;
+            --light-grey: #f5f5f5;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-grey);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            background-color: var(--navy-blue);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .header-logo { display: flex; align-items: center; }
+        header img { height: 60px; margin-right: 15px; }
+        header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+        /* Alerte */
+        .alert-card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            border-top: 8px solid #25D366; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .alert-card h2 { margin-top: 0; color: #128C7E; letter-spacing: 1px; }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .btn-bip {
+            background-color: #25D366; 
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-bip:hover { background-color: #128C7E; transform: scale(1.02); }
+
+        /* Indicateurs */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-bottom: 4px solid #ddd;
+        }
+
+        .stat-box h3 { margin: 0; font-size: 38px; }
+        .stat-box p { margin: 5px 0 0 0; font-weight: bold; font-size: 13px; color: #555; }
+
+        .immediat { color: #2e7d32; border-color: #2e7d32; }
+        .t1h { color: #827717; border-color: #827717; }
+        .t2h { color: #fbc02d; border-color: #fbc02d; }
+        .t3h { color: #f57c00; border-color: #f57c00; }
+        .tplus3h { color: #d84315; border-color: #d84315; }
+        .indispo { color: #c62828; border-color: #c62828; }
+
+        /* Tableau */
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: var(--navy-blue); color: white; font-size: 12px; text-transform: uppercase; }
+
+        .btn-delete {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border: 1px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+        .btn-delete:hover { background-color: white; color: var(--navy-blue); }
+
+        /* Bouton de confirmation équipage */
+        .btn-confirm {
+            background-color: var(--navy-blue);
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .btn-confirm:hover { background-color: #11185b; }
+        .badge-retenu {
+            background-color: #2e7d32;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app-content" style="display:none;">
+    <header>
+        <div class="header-logo">
+            <img src="icon.png" alt="Logo Sud-Est">
+            <h1>COZ Sud-Est | Mobilisation des SPVE et Réserves BMC</h1>
+        </div>
+        <button class="btn-delete" onclick="resetDonnees()">RAZ BASE DE DONNÉES</button>
+    </header>
+
+    <div class="container">
+        <div class="alert-card">
+            <h2>🚨 DIFFUSION DE L'ALERTE</h2>
+            <input type="text" id="motif-alerte" placeholder="Indiquez le motif de la mobilisation...">
+            <br>
+            <button class="btn-bip" onclick="envoyerAlerte()">Envoyer message d'alerte Whatsapp</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box immediat"><h3 id="count-immediat">0</h3><p>IMMÉDIAT</p></div>
+            <div class="stat-box t1h"><h3 id="count-t1h">0</h3><p>T + 1H</p></div>
+            <div class="stat-box t2h"><h3 id="count-t2h">0</h3><p>T + 2H</p></div>
+            <div class="stat-box t3h"><h3 id="count-t3h">0</h3><p>T + 3H</p></div>
+            <div class="stat-box tplus3h"><h3 id="count-tplus3h">0</h3><p>T > 3H</p></div>
+            <div class="stat-box indispo"><h3 id="count-indispo">0</h3><p>INDISPONIBLE</p></div>
+        </div>
+
+        <div class="table-container">
+            <h3>JOURNAL DES RÉPONSES ET VALIDATION ÉQUIPAGE</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Heure</th>
+                        <th>Nom du Personnel</th>
+                        <th>Statut</th>
+                        <th>Action COZ</th>
+                    </tr>
+                </thead>
+                <tbody id="journal-reponses"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- SÉCURITÉ ---
+    let mdp = prompt("Code d'accès Chef de Garde :");
+    if (mdp === "18") {
+        document.getElementById('app-content').style.display = 'block';
+    } else {
+        alert("Accès refusé");
+        window.stop();
+    }
+
+    // --- FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3Ris9pwHSnvpXGSgIDIUztC05Apg47jU",
+        authDomain: "alerte-spve-coz-se.firebaseapp.com",
+        databaseURL: "https://alerte-spve-coz-se-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "alerte-spve-coz-se",
+        storageBucket: "alerte-spve-coz-se.firebasestorage.app",
+        messagingSenderId: "681070251949",
+        appId: "1:681070251949:web:1ddec547160937a9f29b24"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // --- LOGIQUE DE CALCUL ET AFFICHAGE ---
+    database.ref('reponses').on('value', function(snapshot) {
+        const tbody = document.getElementById('journal-reponses');
+        tbody.innerHTML = "";
+        
+        let c = { imm: 0, t1h: 0, t2h: 0, t3h: 0, tplus3h: 0, ind: 0 };
+
+        snapshot.forEach(function(child) {
+            let data = child.val();
+            let key = child.key; 
+            
+            // MODIFICATION ICI : On compte "Immédiat" ET "Immédiate" pour éviter le bug des anciennes données
+            if (data.statut === "Immédiat" || data.statut === "Immédiate") c.imm++;
+            else if (data.statut === "T+1h") c.t1h++;
+            else if (data.statut === "T+2h") c.t2h++;
+            else if (data.statut === "T+3h") c.t3h++;
+            else if (data.statut === "T>3h") c.tplus3h++;
+            else if (data.statut === "Indisponible") c.ind++;
+
+            let actionHtml = "";
+            if (data.confirme) {
+                actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
+            } else if (data.statut !== "Indisponible") {
+                actionHtml = `<button class="btn-confirm" onclick="confirmerPompier('${key}', \`${data.nom}\`)">Confirmer le départ</button>`;
+            } else {
+                actionHtml = `<span style="color:#aaa;">-</span>`;
+            }
+
+            let row = `<tr>
+                <td>${data.heure}</td>
+                <td><strong>${data.nom}</strong></td>
+                <td style="color:${getColor(data.statut)}; font-weight:bold;">${data.statut}</td>
+                <td>${actionHtml}</td>
+            </tr>`;
+            tbody.innerHTML = row + tbody.innerHTML;
+        });
+
+        // Mise à jour des chiffres
+        document.getElementById('count-immediat').innerText = c.imm;
+        document.getElementById('count-t1h').innerText = c.t1h;
+        document.getElementById('count-t2h').innerText = c.t2h;
+        document.getElementById('count-t3h').innerText = c.t3h;
+        document.getElementById('count-tplus3h').innerText = c.tplus3h;
+        document.getElementById('count-indispo').innerText = c.ind;
+    });
+
+    // Couleur des statuts (corrigé pour l'ancienne orthographe aussi)
+    function getColor(s) {
+        if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
+        if (s === "T+1h") return "#827717";
+        if (s === "T+2h") return "#fbc02d";
+        if (s === "T+3h") return "#f57c00";
+        if (s === "T>3h") return "#d84315";
+        if (s === "Indisponible") return "#c62828";
+        return "#333"; 
+    }
+
+    // --- FONCTION DE CONFIRMATION INDIVIDUELLE (MODIFIÉE) ---
+    function confirmerPompier(clef, nom) {
+        database.ref('reponses/' + clef).update({ confirme: true })
+        .then(() => {
+            // MODIFICATION ICI : Le nouveau message avec les émojis d'urgence
+            let texteMessage = `🚨🚑 *URGENCE - CONFIRMATION DE MOBILISATION* 🚒🚨\n\n*${nom}*, votre présence a été retenue.\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨`;
+            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
+            
+            window.open(lienWhatsApp, '_blank');
+        })
+        .catch(err => alert("Erreur de confirmation : " + err));
+    }
+
+    // --- FONCTION ALERTE GÉNÉRALE WHATSAPP ---
+    function envoyerAlerte() {
+        let motif = document.getElementById('motif-alerte').value;
+        if(!motif) return alert("Saisissez un motif !");
+
+        database.ref('alertes').push({
+            motif: motif,
+            timestamp: Date.now()
+        }).then(() => {
+            
+            let lienWeb = "VOTRE_NOUVEAU_LIEN/pompier.html";
+            let texteMessage = `🚨 *ALERTE MOBILISATION* 🚨\n\n*Motif :* ${motif}\n\n👉 *Indiquez votre disponibilité en cliquant ici :*\n${lienNetlify}`;
+            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
+            
+            window.open(lienWhatsApp, '_blank');
+            document.getElementById('motif-alerte').value = "";
+        }).catch(err => alert("Erreur : " + err));
+    }
+
+    // --- REMISE À ZÉRO ---
+    function resetDonnees() {
+        if (confirm("⚠️ Confirmer la remise à zéro de la garde ?")) {
+            database.ref('reponses').remove();
+            database.ref('alertes').remove();
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>

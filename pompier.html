@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préalerte SPVE et Réserves BMC</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4; margin: 0; }
+        .btn { padding: 15px; margin: 5px; width: 90%; font-size: 16px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        .btn-imm { background-color: #28a745; }
+        .btn-t1h { background-color: #827717; }
+        .btn-t2h { background-color: #fbc02d; color: black; }
+        .btn-t3h { background-color: #f57c00; }
+        .btn-tplus3h { background-color: #d84315; }
+        .btn-indispo { background-color: #dc3545; }
+
+        @keyframes clignote-rouge { 
+            0% { background-color: #dc3545; transform: scale(1); } 
+            50% { background-color: #ff4d4d; transform: scale(1.02); box-shadow: 0 0 15px #ff4d4d; } 
+            100% { background-color: #dc3545; transform: scale(1); } 
+        }
+        
+        .zone-urgence {
+            display: none; 
+            color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            animation: clignote-rouge 1s infinite;
+            border: 2px solid darkred;
+        }
+
+        .msg-succes {
+            display: none;
+            background-color: #128C7E; 
+            color: white;
+            padding: 25px 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <h1 style="color: #1a237e;">🚨 Préalerte & Prospection</h1>
+
+    <div id="zone-alerte" class="zone-urgence">
+        <h2 style="margin:0; font-size: 24px;">🚨 PROSPECTION EN COURS 🚨</h2>
+        <p id="texte-motif" style="font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+    </div>
+
+    <div id="zone-formulaire">
+        <input type="text" id="nom" placeholder="VOTRE NOM (ex: SGT DUPONT)" style="padding: 15px; width: 85%; margin-bottom: 20px; font-size: 16px; text-transform: uppercase; border: 2px solid #ccc; border-radius: 5px;"><br>
+
+        <h3 style="color: #333;">Votre Disponibilité :</h3>
+        <button class="btn btn-imm" onclick="envoyerReponse('Immédiat')">Immédiat</button>
+        <button class="btn btn-t1h" onclick="envoyerReponse('T+1h')">T + 1h</button>
+        <button class="btn btn-t2h" onclick="envoyerReponse('T+2h')">T + 2h</button>
+        <button class="btn btn-t3h" onclick="envoyerReponse('T+3h')">T + 3h</button>
+        <button class="btn btn-tplus3h" onclick="envoyerReponse('T>3h')">T > 3h</button>
+        <button class="btn btn-indispo" onclick="envoyerReponse('Indisponible')">Indisponible</button>
+    </div>
+
+    <div id="message-confirmation" class="msg-succes">
+        <h2 style="margin-top: 0;">✅ Réponse Transmise</h2>
+        <p style="font-size: 16px; font-weight: bold;">
+            Veuillez surveiller WhatsApp.<br><br>
+            La confirmation du COZ sera envoyée sur le groupe ! 📱
+        </p>
+    </div>
+
+    <script>
+        // --- DESTRUCTION DU CACHE ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+
+        window.onload = function() {
+            let nomSauvegarde = localStorage.getItem("nomPompier");
+            if (nomSauvegarde) {
+                document.getElementById('nom').value = nomSauvegarde;
+            }
+        };
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3Ris9pwHSnvpXGSgIDIUztC05Apg47jU",
+            authDomain: "alerte-spve-coz-se.firebaseapp.com",
+            databaseURL: "https://alerte-spve-coz-se-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "alerte-spve-coz-se",
+            storageBucket: "alerte-spve-coz-se.firebasestorage.app",
+            messagingSenderId: "681070251949",
+            appId: "1:681070251949:web:1ddec547160937a9f29b24"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function envoyerReponse(statut) {
+            let nom = document.getElementById('nom').value;
+            if(!nom) { alert("⚠️ Veuillez saisir votre nom !"); return; }
+            
+            localStorage.setItem("nomPompier", nom);
+            let heure = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            
+            database.ref('reponses').push({ nom: nom, statut: statut, heure: heure })
+            .then(() => {
+                document.getElementById('zone-formulaire').style.display = 'none';
+                document.getElementById('message-confirmation').style.display = 'block';
+                window.scrollTo(0, 0);
+            })
+            .catch((err) => alert("Erreur de connexion : " + err));
+        }
+
+        database.ref('alertes').on('child_added', (snap) => {
+            let a = snap.val();
+            if (a.timestamp > Date.now() - 600000) { 
+                document.getElementById('zone-alerte').style.display = 'block';
+                document.getElementById('texte-motif').innerText = a.motif;
+            }
+        });
+    </script>
+</body>
+</html>
