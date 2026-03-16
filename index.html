@@ -247,16 +247,42 @@
         return "#333"; 
     }
 
+    // --- NOUVELLE FONCTION : DEMANDE DE RELÈVE ---
+    function demanderReleve(clef, nom) {
+        // On enregistre que c'est une relève dans la base de données
+        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
+        .then(() => {
+            let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
+            
+            // Message spécifique WhatsApp pour la relève avec émojis oranges 
+            let texteMessage = `🚨🔄 *DEMANDE DE RELÈVE* 🔄🚨\n\n🟠 *${nom}*, le commandement sollicite votre présence pour effectuer une relève.\n\n👉 *Êtes-vous toujours disponible pour vous rendre au COZ ?*\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER VOTRE DÉPART :*\n${lienAck}`;
+            
+            let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
+            window.open(lienWhatsApp, '_blank');
+        })
+        .catch(err => alert("Erreur d'accès !"));
+    }
+
+    function getColor(s) {
+        if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
+        if (s === "T+1h") return "#827717";
+        if (s === "T+2h") return "#fbc02d";
+        if (s === "T+3h") return "#f57c00";
+        if (s === "T>3h") return "#d84315";
+        if (s === "Indisponible") return "#c62828";
+        return "#333"; 
+    }
+
     // --- FONCTIONS D'ALERTE ET D'ACTION (Protégées) ---
     function confirmerPompier(clef, nom) {
-        database.ref('reponses/' + clef).update({ confirme: true })
+        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "immediat" })
         .then(() => {
             let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
             
             // Nouveau message de confirmation ultra-visuel
             let texteMessage = `🚨🚒 *CONFIRMATION DE DÉPART* 🚒🚨\n\n🟢 *${nom}*, votre présence est validée par le commandement.\n\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
             
-            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
+            let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
         })
         .catch(err => alert("Erreur d'accès !"));
@@ -275,7 +301,7 @@
             // Nouveau message d'alerte générale avec gyrophares
             let texteMessage = `🚨🔴 *ALERTE MOBILISATION IMMÉDIATE* 🔴🚨\n\n⚠️ *MOTIF :* ${motif}\n\n👉 *INDIQUEZ VOTRE DISPONIBILITÉ EN CLIQUANT ICI :*\n${lienNetlify}`;
             
-            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
+            let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
             document.getElementById('motif-alerte').value = "";
         }).catch(err => alert("Erreur d'accès !"));
