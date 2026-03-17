@@ -135,17 +135,15 @@
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const auth = firebase.auth(); // On active l'outil de connexion
+    const auth = firebase.auth(); 
 
     // --- SYSTÈME D'AUTHENTIFICATION ---
     auth.onAuthStateChanged((user) => {
         if (user) {
-            // Utilisateur connecté : on affiche le tableau de bord et on charge les données
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
             chargerDonnees();
         } else {
-            // Utilisateur déconnecté : on bloque tout
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('app-content').style.display = 'none';
         }
@@ -162,7 +160,7 @@
         auth.signOut();
     }
 
-    // --- CHARGEMENT DES DONNÉES (Protégé) ---
+    // --- CHARGEMENT DES DONNÉES ---
     function chargerDonnees() {
         database.ref('reponses').on('value', function(snapshot) {
             const tbody = document.getElementById('journal-reponses');
@@ -180,11 +178,9 @@
                 else if (data.statut === "T>3h") c.tplus3h++;
                 else if (data.statut === "Indisponible") c.ind++;
 
-                // Le style vert et souligné si le pompier a acquitté
                 let styleNom = data.acquitte ? "color: #2e7d32; text-decoration: underline; font-weight: bold;" : "font-weight: bold;";
                 let texteConfirme = data.acquitte ? "<br><span style='color:#2e7d32; font-size: 13px;'>✅ Départ confirmé</span>" : "";
 
-                // NOUVEAU : Gestion des deux boutons (Départ immédiat et Relève)
                 let actionHtml = "";
                 if (data.confirme) {
                     if (data.type_depart === "releve") {
@@ -221,22 +217,6 @@
         });
     }
 
-    // --- NOUVELLE FONCTION : DEMANDE DE RELÈVE ---
-    function demanderReleve(clef, nom) {
-        // On enregistre que c'est une relève dans la base de données
-        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
-        .then(() => {
-            let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
-            
-            // Message spécifique WhatsApp pour la relève avec émojis oranges 
-            let texteMessage = `🚨🔄 *DEMANDE DE RELÈVE* 🔄🚨\n\n🟠 *${nom}*, le commandement sollicite votre présence pour effectuer une relève.\n\n👉 *Êtes-vous toujours disponible pour vous rendre au COZ ?*\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER VOTRE DÉPART :*\n${lienAck}`;
-            
-            let lienWhatsApp = "https://wa.me/?text=" + encodeURIComponent(texteMessage);
-            window.open(lienWhatsApp, '_blank');
-        })
-        .catch(err => alert("Erreur d'accès !"));
-    }
-
     function getColor(s) {
         if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
         if (s === "T+1h") return "#827717";
@@ -247,41 +227,23 @@
         return "#333"; 
     }
 
-    // --- NOUVELLE FONCTION : DEMANDE DE RELÈVE ---
-    function demanderReleve(clef, nom) {
-        // On enregistre que c'est une relève dans la base de données
-        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
+    // --- FONCTIONS D'ALERTE ET D'ACTION ---
+    function confirmerPompier(clef, nom) {
+        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "immediat" })
         .then(() => {
             let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
-            
-            // Message spécifique WhatsApp pour la relève avec émojis oranges 
-            let texteMessage = `🚨🔄 *DEMANDE DE RELÈVE* 🔄🚨\n\n🟠 *${nom}*, le commandement sollicite votre présence pour effectuer une relève.\n\n👉 *Êtes-vous toujours disponible pour vous rendre au COZ ?*\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER VOTRE DÉPART :*\n${lienAck}`;
-            
+            let texteMessage = `🚨🚒 *CONFIRMATION DE DÉPART* 🚒🚨\n\n🟢 *${nom}*, votre présence est validée par le commandement.\n\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
             let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
         })
         .catch(err => alert("Erreur d'accès !"));
     }
 
-    function getColor(s) {
-        if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
-        if (s === "T+1h") return "#827717";
-        if (s === "T+2h") return "#fbc02d";
-        if (s === "T+3h") return "#f57c00";
-        if (s === "T>3h") return "#d84315";
-        if (s === "Indisponible") return "#c62828";
-        return "#333"; 
-    }
-
-    // --- FONCTIONS D'ALERTE ET D'ACTION (Protégées) ---
-    function confirmerPompier(clef, nom) {
-        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "immediat" })
+    function demanderReleve(clef, nom) {
+        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
         .then(() => {
             let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
-            
-            // Nouveau message de confirmation ultra-visuel
-            let texteMessage = `🚨🚒 *CONFIRMATION DE DÉPART* 🚒🚨\n\n🟢 *${nom}*, votre présence est validée par le commandement.\n\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
-            
+            let texteMessage = `🚨🔄 *DEMANDE DE RELÈVE* 🔄🚨\n\n🟠 *${nom}*, le commandement sollicite votre présence pour effectuer une relève.\n\n👉 *Êtes-vous toujours disponible pour vous rendre au COZ ?*\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER VOTRE DÉPART :*\n${lienAck}`;
             let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
         })
@@ -297,10 +259,7 @@
             timestamp: Date.now()
         }).then(() => {
             let lienNetlify = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html";
-            
-            // Nouveau message d'alerte générale avec gyrophares
             let texteMessage = `🚨🔴 *ALERTE MOBILISATION IMMÉDIATE* 🔴🚨\n\n⚠️ *MOTIF :* ${motif}\n\n👉 *INDIQUEZ VOTRE DISPONIBILITÉ EN CLIQUANT ICI :*\n${lienNetlify}`;
-            
             let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
             window.open(lienWhatsApp, '_blank');
             document.getElementById('motif-alerte').value = "";
@@ -316,6 +275,5 @@
         }
     }
 </script>
-
 </body>
 </html>
