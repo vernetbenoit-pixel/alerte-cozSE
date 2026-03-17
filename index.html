@@ -8,70 +8,133 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
+        /* --- DESIGN ÉTATIQUE --- */
         :root {
-            --pompier-red: #d32f2f;
-            --navy-blue: #1a237e;
-            --light-grey: #f5f5f5;
+            --marianne-blue: #000091;
+            --marianne-red: #e1000f;
+            --marianne-green: #008941;
+            --light-grey: #f4f6f8;
+            --dark-grey: #161616;
             --white: #ffffff;
+            --border-color: #e0e0e0;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light-grey); margin: 0; padding: 0; color: #333; }
-        header { background-color: var(--navy-blue); color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .header-logo { display: flex; align-items: center; }
-        header img { height: 60px; margin-right: 15px; }
-        header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* --- NOUVEAU : Écran de connexion --- */
-        #login-screen {
-            max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border-top: 8px solid var(--navy-blue);
+        body { font-family: "Marianne", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--light-grey); margin: 0; padding: 0; color: var(--dark-grey); -webkit-font-smoothing: antialiased; }
+        
+        /* HEADER */
+        header { background-color: var(--marianne-blue); color: white; padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; }
+        .header-logo { display: flex; align-items: center; gap: 20px; }
+        header img { height: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+        
+        /* LISERÉ BBR AVEC SÉPARATEUR BLANC */
+        .bbr-strip {
+            height: 6px;
+            background: linear-gradient(90deg, var(--marianne-blue) 33.33%, #ffffff 33.33%, #ffffff 66.66%, var(--marianne-red) 66.66%);
+            width: 100%;
+            border-top: 2px solid var(--white); /* La ligne blanche de séparation est ici ! */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        #login-screen input { width: 90%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; outline: none; }
-        .btn-login { background-color: var(--navy-blue); color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-login:hover { background-color: #11185b; }
 
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .alert-card { background: var(--white); border-radius: 10px; padding: 25px; text-align: center; border-top: 8px solid #25D366; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .alert-card h2 { margin-top: 0; color: #128C7E; letter-spacing: 1px; }
-        .alert-card input[type="text"] { width: 70%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 15px; outline: none; }
+        /* BOUTONS D'EN-TÊTE */
+        .header-actions { display: flex; gap: 10px; }
+        .btn-header { background-color: rgba(255,255,255,0.1); color: white; padding: 10px 15px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .btn-header:hover { background-color: white; color: var(--marianne-blue); }
+        .btn-header.danger:hover { background-color: var(--marianne-red); color: white; border-color: var(--marianne-red); }
+
+        /* ÉCRAN DE CONNEXION */
+        #login-screen { max-width: 420px; margin: 10vh auto; background: white; padding: 50px 40px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--marianne-blue); }
+        #login-screen h2 { color: var(--marianne-blue); margin-top: 0; font-weight: 800; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 5px; text-transform: uppercase; }
+        #login-screen input { width: 100%; box-sizing: border-box; padding: 14px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 15px; outline: none; transition: 0.2s; background: #f9f9f9; }
+        #login-screen input:focus { border-color: var(--marianne-blue); background: white; }
+        .btn-login { background-color: var(--marianne-blue); color: white; padding: 15px; width: 100%; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-login:hover { background-color: #000066; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,145,0.2); }
+
+        /* CONTENEUR PRINCIPAL */
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+
+        /* CARTE ALERTE */
+        .alert-card { background: var(--white); border-radius: 8px; padding: 30px; border-left: 6px solid var(--marianne-red); box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .alert-card-content { flex: 1; }
+        .alert-card h2 { margin-top: 0; color: var(--marianne-red); letter-spacing: 1px; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-card input[type="text"] { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px; border: 2px solid var(--border-color); border-radius: 4px; outline: none; background: #f9f9f9; transition: 0.2s; }
+        .alert-card input[type="text"]:focus { border-color: var(--marianne-red); background: white; }
+        .btn-bip { background-color: var(--marianne-red); color: white; padding: 15px 30px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; height: fit-content; align-self: flex-end; }
+        .btn-bip:hover { background-color: #b3000c; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(225,0,15,0.2); }
+
+        /* GRILLE STATISTIQUES FORCÉE SUR UNE SEULE LIGNE */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); /* 6 colonnes imposées */
+            gap: 15px; 
+            margin-bottom: 30px; 
+        }
+        .stat-box { background: white; padding: 15px 10px; border-radius: 8px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border-top: 4px solid #ddd; transition: 0.2s; }
+        .stat-box:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+        .stat-box h3 { margin: 0; font-size: 36px; font-weight: 900; } /* Police un peu plus fine pour rentrer */
+        .stat-box p { margin: 5px 0 0 0; font-weight: 800; font-size: 12px; text-transform: uppercase; color: #555; }
+
+        .immediat { border-color: var(--marianne-green); color: var(--marianne-green); }
+        .t1h { border-color: var(--marianne-blue); color: var(--marianne-blue); }
+        .t2h { border-color: #2b54a0; color: #2b54a0; }
+        .t3h { border-color: #5377c0; color: #5377c0; }
+        .tplus3h { border-color: #8c9cd9; color: #666; }
+        .indispo { border-color: var(--marianne-red); color: var(--marianne-red); }
+
+        /* TABLEAU DE BORD */
+        .table-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .table-header { border-bottom: 2px solid var(--marianne-blue); padding-bottom: 10px; margin-bottom: 20px; }
+        .table-header h3 { margin: 0; color: var(--marianne-blue); font-size: 18px; text-transform: uppercase; }
         
-        .btn-bip { background-color: #25D366; color: white; padding: 15px 40px; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-bip:hover { background-color: #128C7E; transform: scale(1.02); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: #555; font-size: 13px; text-transform: uppercase; font-weight: 800; background: #f9f9f9; }
+        th:first-child { border-top-left-radius: 4px; }
+        th:last-child { border-top-right-radius: 4px; }
+        tr:hover td { background-color: #f8fafc; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-box { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-bottom: 4px solid #ddd; }
-        .stat-box h3 { margin: 0; font-size: 38px; }
-        .stat-box p { margin: 5px 0 0 0; font-weight: bold; font-size: 13px; color: #555; }
-
-        .immediat { color: #2e7d32; border-color: #2e7d32; }
-        .t1h { color: #827717; border-color: #827717; }
-        .t2h { color: #fbc02d; border-color: #fbc02d; }
-        .t3h { color: #f57c00; border-color: #f57c00; }
-        .tplus3h { color: #d84315; border-color: #d84315; }
-        .indispo { color: #c62828; border-color: #c62828; }
-
-        .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: var(--navy-blue); color: white; font-size: 12px; text-transform: uppercase; }
-
-        .btn-delete { background-color: rgba(255,255,255,0.2); color: white; padding: 8px 15px; border: 1px solid white; border-radius: 4px; cursor: pointer; font-size: 12px; transition: 0.3s; }
-        .btn-delete:hover { background-color: white; color: var(--navy-blue); }
-        
-        .btn-confirm { background-color: var(--navy-blue); color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .badge-retenu { background-color: #2e7d32; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
-        /* Bouton et badge pour la relève */
-        .btn-releve { background-color: #f57c00; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        /* ACTIONS DANS LE TABLEAU */
+        .action-cell { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-confirm { background-color: var(--marianne-green); color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase; transition: 0.2s; }
+        .btn-confirm:hover { background-color: #006b32; }
+        .btn-releve { background-color: #f57c00; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase; transition: 0.2s; }
         .btn-releve:hover { background-color: #e65100; }
-        .badge-releve { background-color: #f57c00; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
+        
+        .badge-retenu { background-color: #e8f5e9; color: var(--marianne-green); border: 1px solid var(--marianne-green); padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; }
+        .badge-releve { background-color: #fff3e0; color: #e65100; border: 1px solid #ff9800; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; }
+        
+        .nom-pompier { font-size: 15px; }
+        .texte-ack { color: var(--marianne-green); font-size: 12px; font-weight: bold; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
+
+        /* RESPONSIVE (Si écran très petit ou mobile) */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); } /* Passe en 3 colonnes sur tablette */
+        }
+        @media (max-width: 768px) {
+            .alert-card { flex-direction: column; align-items: stretch; }
+            .btn-bip { align-self: stretch; text-align: center; }
+            header { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { width: 100%; justify-content: center; }
+            th, td { padding: 10px; font-size: 14px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); } /* Passe en 2 colonnes sur mobile */
+        }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <img src="icon.png" alt="Logo" height="80" style="margin-bottom: 15px;">
-    <h2 style="color: var(--navy-blue); margin-top: 0;">🔒 Accès COZ Restreint</h2>
-    <input type="email" id="email" placeholder="Adresse e-mail">
-    <input type="password" id="password" placeholder="Mot de passe">
+    <img src="icon.png" alt="Logo" height="85" style="margin-bottom: 20px;">
+    <h2>SYSTÈME D'ALERTE COZ</h2>
+    <div class="input-group">
+        <label for="email">Identifiant / E-mail</label>
+        <input type="email" id="email" placeholder="Saisissez votre e-mail">
+    </div>
+    <div class="input-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••">
+    </div>
     <button class="btn-login" onclick="seConnecter()">S'IDENTIFIER</button>
 </div>
 
@@ -79,20 +142,22 @@
     <header>
         <div class="header-logo">
             <img src="icon.png" alt="Logo Sud-Est">
-            <h1>COZ Sud-Est | Mobilisation des SPVE et Réserves BMC</h1>
+            <h1>CENTRE OPÉRATIONNEL ZONAL SUD-EST</h1>
         </div>
-        <div>
-            <button class="btn-delete" onclick="resetDonnees()" style="margin-right: 10px;">RAZ BASE DE DONNÉES</button>
-            <button class="btn-delete" onclick="seDeconnecter()">DÉCONNEXION</button>
+        <div class="header-actions">
+            <button class="btn-header danger" onclick="resetDonnees()">🔄 PURGER LA GARDE</button>
+            <button class="btn-header" onclick="seDeconnecter()">🚪 DÉCONNEXION</button>
         </div>
     </header>
+    <div class="bbr-strip"></div>
 
     <div class="container">
         <div class="alert-card">
-            <h2>🚨 DIFFUSION DE L'ALERTE</h2>
-            <input type="text" id="motif-alerte" placeholder="Indiquez le motif de la mobilisation...">
-            <br>
-            <button class="btn-bip" onclick="envoyerAlerte()">Envoyer message d'alerte Whatsapp</button>
+            <div class="alert-card-content">
+                <h2>🚨 Lancement d'une Prospection</h2>
+                <input type="text" id="motif-alerte" placeholder="Ex: Feu de forêt important secteur Alpha - Besoin relève immédiate...">
+            </div>
+            <button class="btn-bip" onclick="envoyerAlerte()">📢 DIFFUSER L'ALERTE</button>
         </div>
 
         <div class="stats-grid">
@@ -105,14 +170,16 @@
         </div>
 
         <div class="table-container">
-            <h3>JOURNAL DES RÉPONSES ET VALIDATION ÉQUIPAGE</h3>
+            <div class="table-header">
+                <h3>📋 Tableau de Suivi et Validation</h3>
+            </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Heure</th>
-                        <th>Nom du Personnel</th>
-                        <th>Statut</th>
-                        <th>Action COZ</th>
+                        <th width="10%">Heure</th>
+                        <th width="35%">Nom du Personnel</th>
+                        <th width="20%">Disponibilité</th>
+                        <th width="35%">Action de Commandement</th>
                     </tr>
                 </thead>
                 <tbody id="journal-reponses"></tbody>
@@ -178,36 +245,39 @@
                 else if (data.statut === "T>3h") c.tplus3h++;
                 else if (data.statut === "Indisponible") c.ind++;
 
-                let styleNom = data.acquitte ? "color: #2e7d32; text-decoration: underline; font-weight: bold;" : "font-weight: bold;";
-                let texteConfirme = data.acquitte ? "<br><span style='color:#2e7d32; font-size: 13px;'>✅ Départ confirmé</span>" : "";
+                // Formatage du nom et de l'acquittement
+                let styleNom = data.acquitte ? "color: var(--marianne-green); font-weight: 800;" : "font-weight: bold;";
+                let texteConfirme = data.acquitte ? "<br><span class='texte-ack'>✅ DÉPART ACQUITTÉ</span>" : "";
 
+                // Actions
                 let actionHtml = "";
                 if (data.confirme) {
                     if (data.type_depart === "releve") {
-                        actionHtml = `<span class="badge-releve">🔄 Relève Retenue</span>`;
+                        actionHtml = `<span class="badge-releve">🔄 RELÈVE RETENUE</span>`;
                     } else {
-                        actionHtml = `<span class="badge-retenu">✅ Équipage Retenu</span>`;
+                        actionHtml = `<span class="badge-retenu">✅ ÉQUIPAGE ENGAGÉ</span>`;
                     }
                 } else if (data.statut !== "Indisponible") {
                     actionHtml = `
-                        <div style="display: flex; gap: 8px;">
+                        <div class="action-cell">
                             <button class="btn-confirm" onclick="confirmerPompier('${key}', \`${data.nom}\`)">Confirmer départ</button>
                             <button class="btn-releve" onclick="demanderReleve('${key}', \`${data.nom}\`)">Demander Relève</button>
                         </div>
                     `;
                 } else {
-                    actionHtml = `<span style="color:#aaa;">-</span>`;
+                    actionHtml = `<span style="color:#aaa; font-style: italic;">Aucune action</span>`;
                 }
 
                 let row = `<tr>
-                    <td>${data.heure}</td>
-                    <td><span style="${styleNom}">${data.nom}</span>${texteConfirme}</td>
-                    <td style="color:${getColor(data.statut)}; font-weight:bold;">${data.statut}</td>
+                    <td style="color:#555; font-weight:bold;">${data.heure}</td>
+                    <td><div class="nom-pompier" style="${styleNom}">${data.nom}</div>${texteConfirme}</td>
+                    <td style="color:${getColor(data.statut)}; font-weight:800; text-transform:uppercase;">${data.statut}</td>
                     <td>${actionHtml}</td>
                 </tr>`;
-                tbody.innerHTML = row + tbody.innerHTML;
+                tbody.innerHTML = row + tbody.innerHTML; // Ajout en haut
             });
 
+            // Mise à jour des compteurs
             document.getElementById('count-immediat').innerText = c.imm;
             document.getElementById('count-t1h').innerText = c.t1h;
             document.getElementById('count-t2h').innerText = c.t2h;
@@ -218,12 +288,12 @@
     }
 
     function getColor(s) {
-        if (s === "Immédiat" || s === "Immédiate") return "#2e7d32";
-        if (s === "T+1h") return "#827717";
-        if (s === "T+2h") return "#fbc02d";
-        if (s === "T+3h") return "#f57c00";
-        if (s === "T>3h") return "#d84315";
-        if (s === "Indisponible") return "#c62828";
+        if (s === "Immédiat" || s === "Immédiate") return "var(--marianne-green)";
+        if (s === "T+1h") return "var(--marianne-blue)";
+        if (s === "T+2h") return "#2b54a0";
+        if (s === "T+3h") return "#5377c0";
+        if (s === "T>3h") return "#666";
+        if (s === "Indisponible") return "var(--marianne-red)";
         return "#333"; 
     }
 
@@ -252,7 +322,7 @@
 
     function envoyerAlerte() {
         let motif = document.getElementById('motif-alerte').value;
-        if(!motif) return alert("Saisissez un motif !");
+        if(!motif) return alert("Saisissez un motif de prospection !");
 
         database.ref('alertes').push({
             motif: motif,
@@ -267,7 +337,7 @@
     }
 
     function resetDonnees() {
-        if (confirm("⚠️ Confirmer la remise à zéro de la garde ?")) {
+        if (confirm("⚠️ ATTENTION : Confirmez-vous la purge totale de la main courante ? Cette action est irréversible.")) {
             database.ref('reponses').remove()
             .then(() => database.ref('alertes').remove())
             .then(() => alert("Base purgée avec succès !"))
