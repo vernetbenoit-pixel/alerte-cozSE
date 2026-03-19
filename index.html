@@ -24,7 +24,17 @@
         /* HEADER */
         header { background-color: var(--marianne-blue); color: white; padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; }
         .header-logo { display: flex; align-items: center; gap: 20px; }
-        header img { height: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        
+        /* LOGO DU HEADER (Arrondi, sans cadre blanc) */
+        .header-logo img { 
+            height: 55px; 
+            width: 55px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        }
+        
         header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
         
         /* LISERÉ BBR AVEC SÉPARATEUR BLANC */
@@ -32,7 +42,7 @@
             height: 6px;
             background: linear-gradient(90deg, var(--marianne-blue) 33.33%, #ffffff 33.33%, #ffffff 66.66%, var(--marianne-red) 66.66%);
             width: 100%;
-            border-top: 2px solid var(--white); /* La ligne blanche de séparation est ici ! */
+            border-top: 2px solid var(--white);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
@@ -45,6 +55,18 @@
         /* ÉCRAN DE CONNEXION */
         #login-screen { max-width: 420px; margin: 10vh auto; background: white; padding: 50px 40px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--marianne-blue); }
         #login-screen h2 { color: var(--marianne-blue); margin-top: 0; font-weight: 800; margin-bottom: 30px; }
+        
+        /* LOGO DE CONNEXION (Arrondi, sans cadre blanc) */
+        #login-screen img {
+            height: 85px;
+            width: 85px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
         .input-group { margin-bottom: 20px; text-align: left; }
         .input-group label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 5px; text-transform: uppercase; }
         #login-screen input { width: 100%; box-sizing: border-box; padding: 14px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 15px; outline: none; transition: 0.2s; background: #f9f9f9; }
@@ -64,16 +86,16 @@
         .btn-bip { background-color: var(--marianne-red); color: white; padding: 15px 30px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; height: fit-content; align-self: flex-end; }
         .btn-bip:hover { background-color: #b3000c; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(225,0,15,0.2); }
 
-        /* GRILLE STATISTIQUES FORCÉE SUR UNE SEULE LIGNE */
+        /* GRILLE STATISTIQUES */
         .stats-grid { 
             display: grid; 
-            grid-template-columns: repeat(6, 1fr); /* 6 colonnes imposées */
+            grid-template-columns: repeat(6, 1fr);
             gap: 15px; 
             margin-bottom: 30px; 
         }
         .stat-box { background: white; padding: 15px 10px; border-radius: 8px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.04); border-top: 4px solid #ddd; transition: 0.2s; }
         .stat-box:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
-        .stat-box h3 { margin: 0; font-size: 36px; font-weight: 900; } /* Police un peu plus fine pour rentrer */
+        .stat-box h3 { margin: 0; font-size: 36px; font-weight: 900; }
         .stat-box p { margin: 5px 0 0 0; font-weight: 800; font-size: 12px; text-transform: uppercase; color: #555; }
 
         .immediat { border-color: var(--marianne-green); color: var(--marianne-green); }
@@ -108,9 +130,9 @@
         .nom-pompier { font-size: 15px; }
         .texte-ack { color: var(--marianne-green); font-size: 12px; font-weight: bold; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
 
-        /* RESPONSIVE (Si écran très petit ou mobile) */
+        /* RESPONSIVE */
         @media (max-width: 1024px) {
-            .stats-grid { grid-template-columns: repeat(3, 1fr); } /* Passe en 3 colonnes sur tablette */
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
             .alert-card { flex-direction: column; align-items: stretch; }
@@ -118,14 +140,14 @@
             header { flex-direction: column; gap: 15px; text-align: center; }
             .header-actions { width: 100%; justify-content: center; }
             th, td { padding: 10px; font-size: 14px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); } /* Passe en 2 colonnes sur mobile */
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <img src="icon.png" alt="Logo" height="85" style="margin-bottom: 20px;">
+    <img src="logo-coz.png" alt="Logo COZ">
     <h2>SYSTÈME D'ALERTE COZ</h2>
     <div class="input-group">
         <label for="email">Identifiant / E-mail</label>
@@ -141,7 +163,7 @@
 <div id="app-content" style="display:none;">
     <header>
         <div class="header-logo">
-            <img src="icon.png" alt="Logo Sud-Est">
+            <img src="logo-coz.png" alt="Logo Sud-Est">
             <h1>CENTRE OPÉRATIONNEL ZONAL SUD-EST</h1>
         </div>
         <div class="header-actions">
@@ -157,7 +179,7 @@
                 <h2>🚨 Lancement d'une Prospection</h2>
                 <input type="text" id="motif-alerte" placeholder="Ex: Feu de forêt important secteur Alpha - Besoin relève immédiate...">
             </div>
-            <button class="btn-bip" onclick="envoyerAlerte()">📢 DIFFUSER L'ALERTE</button>
+            <button class="btn-bip" onclick="envoyerAlerte()">📢 PARTAGER SUR TCHAP</button>
         </div>
 
         <div class="stats-grid">
@@ -297,44 +319,57 @@
         return "#333"; 
     }
 
-    // --- FONCTIONS D'ALERTE ET D'ACTION ---
-    function confirmerPompier(clef, nom) {
-        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "immediat" })
-        .then(() => {
-            let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
-            let texteMessage = `🚨🚒 *CONFIRMATION DE DÉPART* 🚒🚨\n\n🟢 *${nom}*, votre présence est validée par le commandement.\n\n👉 *Vous êtes attendu(e) au COZ dans le délai annoncé !* 🏃‍♂️💨\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER VOTRE DÉPART :*\n${lienAck}`;
-            let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
-            window.open(lienWhatsApp, '_blank');
-        })
-        .catch(err => alert("Erreur d'accès !"));
-    }
+    // --- LOGIQUE DE DIFFUSION TCHAP OPTIMISÉE ---
+function diffuserVersTchap(texte) {
+    // 1. Copie automatique du texte dans le presse-papier
+    navigator.clipboard.writeText(texte).then(() => {
+        // 2. Notification visuelle pour l'utilisateur
+        const confirmation = confirm(
+            "📋 MESSAGE COPIÉ !\n\nLe texte de l'alerte a été copié dans votre presse-papier.\n\nVoulez-vous ouvrir Tchap pour le coller dans votre salon ?"
+        );
+        
+        // 3. Redirection vers Tchap si l'utilisateur valide
+        if (confirmation) {
+            // Tente d'ouvrir l'application ou la version Web
+            window.open("https://www.tchap.gouv.fr/", "_blank");
+        }
+    }).catch(err => {
+        alert("Erreur lors de la copie du message. Veuillez le copier manuellement.");
+    });
+}
 
-    function demanderReleve(clef, nom) {
-        database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
-        .then(() => {
-            let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
-            let texteMessage = `🚨🔄 *DEMANDE DE RELÈVE* 🔄🚨\n\n🟠 *${nom}*, le commandement sollicite votre présence pour effectuer une relève.\n\n👉 *Êtes-vous toujours disponible pour vous rendre au COZ ?*\n\n⚠️ *CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER VOTRE DÉPART :*\n${lienAck}`;
-            let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
-            window.open(lienWhatsApp, '_blank');
-        })
-        .catch(err => alert("Erreur d'accès !"));
-    }
+function confirmerPompier(clef, nom) {
+    database.ref('reponses/' + clef).update({ confirme: true, type_depart: "immediat" })
+    .then(() => {
+        let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
+        let texteMessage = `🚨🚒 CONFIRMATION DE DÉPART 🚒🚨\n\n🟢 ${nom}, votre présence est validée.\n\n👉 Vous êtes attendu(e) au COZ !\n\n⚠️ CLIQUEZ ICI POUR ACQUITTER :\n${lienAck}`;
+        diffuserVersTchap(texteMessage);
+    });
+}
 
-    function envoyerAlerte() {
-        let motif = document.getElementById('motif-alerte').value;
-        if(!motif) return alert("Saisissez un motif de prospection !");
+function demanderReleve(clef, nom) {
+    database.ref('reponses/' + clef).update({ confirme: true, type_depart: "releve" })
+    .then(() => {
+        let lienAck = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html?uid=" + clef;
+        let texteMessage = `🚨🔄 DEMANDE DE RELÈVE 🔄🚨\n\n🟠 ${nom}, le commandement sollicite votre présence pour une relève.\n\n⚠️ CLIQUEZ ICI POUR ACQUITTER ET CONFIRMER :\n${lienAck}`;
+        diffuserVersTchap(texteMessage);
+    });
+}
 
-        database.ref('alertes').push({
-            motif: motif,
-            timestamp: Date.now()
-        }).then(() => {
-            let lienNetlify = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html";
-            let texteMessage = `🚨🔴 *ALERTE MOBILISATION IMMÉDIATE* 🔴🚨\n\n⚠️ *MOTIF :* ${motif}\n\n👉 *INDIQUEZ VOTRE DISPONIBILITÉ EN CLIQUANT ICI :*\n${lienNetlify}`;
-            let lienWhatsApp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texteMessage);
-            window.open(lienWhatsApp, '_blank');
-            document.getElementById('motif-alerte').value = "";
-        }).catch(err => alert("Erreur d'accès !"));
-    }
+function envoyerAlerte() {
+    let motif = document.getElementById('motif-alerte').value;
+    if(!motif) return alert("Saisissez un motif !");
+
+    database.ref('alertes').push({
+        motif: motif,
+        timestamp: Date.now()
+    }).then(() => {
+        let lienApp = "https://vernetbenoit-pixel.github.io/alerte-cozSE/pompier.html";
+        let texteMessage = `🚨🔴 ALERTE MOBILISATION IMMÉDIATE 🔴🚨\n\n⚠️ MOTIF : ${motif}\n\n👉 INDIQUEZ VOTRE DISPONIBILITÉ ICI :\n${lienApp}`;
+        diffuserVersTchap(texteMessage);
+        document.getElementById('motif-alerte').value = "";
+    });
+}
 
     function resetDonnees() {
         if (confirm("⚠️ ATTENTION : Confirmez-vous la purge totale de la main courante ? Cette action est irréversible.")) {
