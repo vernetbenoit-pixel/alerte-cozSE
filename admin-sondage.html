@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COZ | Administration Sondages</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* --- DESIGN ÉTATIQUE --- */
+        :root { --marianne-blue: #000091; --marianne-red: #e1000f; --marianne-green: #008941; --light-grey: #f4f6f8; --dark-grey: #161616; --border-color: #e0e0e0; }
+        body { font-family: "Marianne", -apple-system, sans-serif; background-color: var(--light-grey); margin: 0; padding: 0; color: var(--dark-grey); }
+        
+        /* HEADER ET LOGIN (Identique à votre application d'alerte) */
+        header { background-color: var(--marianne-blue); color: white; padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; }
+        .header-logo { display: flex; align-items: center; gap: 20px; }
+        .header-logo img { height: 55px; width: 55px; border-radius: 50%; object-fit: cover; background-color: white; }
+        header h1 { margin: 0; font-size: 18px; text-transform: uppercase; font-weight: 800; }
+        .bbr-strip { height: 6px; background: linear-gradient(90deg, var(--marianne-blue) 33.33%, #ffffff 33.33%, #ffffff 66.66%, var(--marianne-red) 66.66%); border-top: 2px solid white; }
+        
+        .btn-header { background-color: rgba(255,255,255,0.1); color: white; padding: 10px 15px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; margin-left: 10px;}
+        .btn-header:hover { background-color: white; color: var(--marianne-blue); }
+        .btn-header.danger:hover { background-color: var(--marianne-red); border-color: var(--marianne-red); color: white;}
+
+        #login-screen { max-width: 420px; margin: 10vh auto; background: white; padding: 50px 40px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--marianne-blue); }
+        #login-screen img { height: 85px; width: 85px; border-radius: 50%; margin-bottom: 20px; }
+        #login-screen h2 { color: var(--marianne-blue); margin-top: 0; font-weight: 800; margin-bottom: 30px; text-transform: uppercase; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 5px; text-transform: uppercase; }
+        #login-screen input { width: 100%; box-sizing: border-box; padding: 14px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 15px; outline: none; background: #f9f9f9; }
+        .btn-login { background-color: var(--marianne-blue); color: white; padding: 15px; width: 100%; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* CONTENU SONDAGE */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .creation-card { background: white; border-radius: 8px; padding: 30px; border-left: 6px solid var(--marianne-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; gap: 20px; align-items: center; }
+        .creation-card-content { flex: 1; }
+        .creation-card h2 { margin-top: 0; color: var(--marianne-blue); font-size: 20px; margin-bottom: 15px; }
+        .creation-card input { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px; border: 2px solid var(--border-color); border-radius: 4px; outline: none; background: #f9f9f9; }
+        .creation-card input:focus { border-color: var(--marianne-blue); background: white; }
+        .btn-lancer { background-color: var(--marianne-blue); color: white; padding: 15px 30px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; height: fit-content; align-self: flex-end; white-space: nowrap; }
+        .btn-lancer:hover { background-color: #000066; }
+
+        /* TABLEAU DES RÉSULTATS */
+        .table-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .table-header { border-bottom: 2px solid var(--marianne-blue); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+        .table-header h3 { margin: 0; color: var(--marianne-blue); font-size: 18px; text-transform: uppercase; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: #555; font-size: 13px; text-transform: uppercase; font-weight: 800; background: #f9f9f9; }
+        tr:hover td { background-color: #f8fafc; }
+
+        .badge { padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; text-transform: uppercase; }
+        .badge-dispo { background-color: #e8f5e9; color: var(--marianne-green); border: 1px solid var(--marianne-green); }
+        .badge-indispo { background-color: #ffebee; color: var(--marianne-red); border: 1px solid var(--marianne-red); }
+        .badge-custom { background-color: #e3f2fd; color: var(--marianne-blue); border: 1px solid var(--marianne-blue); }
+        .custom-text { display: block; font-size: 13px; color: #555; margin-top: 5px; font-weight: normal; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <img src="logo-coz.png" alt="Logo COZ">
+    <h2>ADMINISTRATION SONDAGES</h2>
+    <div class="input-group">
+        <label>Identifiant / E-mail</label>
+        <input type="email" id="email" placeholder="Saisissez votre e-mail">
+    </div>
+    <div class="input-group">
+        <label>Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="seConnecter()">S'IDENTIFIER</button>
+</div>
+
+<div id="app-content" style="display:none;">
+    <header>
+        <div class="header-logo">
+            <img src="logo-coz.png" alt="Logo">
+            <h1>COZ SUD-EST | GESTION DES SONDAGES</h1>
+        </div>
+        <div>
+            <button class="btn-header danger" onclick="purgerSondage()">🗑️ PURGER RÉSULTATS</button>
+            <button class="btn-header" onclick="seDeconnecter()">🚪 DÉCONNEXION</button>
+        </div>
+    </header>
+    <div class="bbr-strip"></div>
+
+    <div class="container">
+        
+        <div class="creation-card">
+            <div class="creation-card-content">
+                <h2>📝 Créer un nouveau sondage</h2>
+                <input type="text" id="input-question" placeholder="Ex: Qui est formé à la conduite du Poste de Commandement Mobile ?">
+            </div>
+            <button class="btn-lancer" onclick="publierQuestion()">🚀 LANCER LE SONDAGE</button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h3>📊 Résultats en direct</h3>
+                <div id="compteurs" style="font-weight: bold; color: #555; font-size: 14px;"></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">Heure</th>
+                        <th width="30%">Nom du Personnel</th>
+                        <th width="55%">Réponse</th>
+                    </tr>
+                </thead>
+                <tbody id="journal-sondage">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configuration Firebase récupérée
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3Ris9pwHSnvpXGSgIDIUztC05Apg47jU",
+        authDomain: "alerte-spve-coz-se.firebaseapp.com",
+        databaseURL: "https://alerte-spve-coz-se-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "alerte-spve-coz-se",
+        storageBucket: "alerte-spve-coz-se.firebasestorage.app",
+        messagingSenderId: "681070251949",
+        appId: "1:681070251949:web:1ddec547160937a9f29b24"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth(); 
+
+    // GESTION CONNEXION
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            chargerResultats();
+        } else {
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('app-content').style.display = 'none';
+        }
+    });
+
+    function seConnecter() {
+        let email = document.getElementById('email').value;
+        let password = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, password).catch(err => alert("Erreur d'identification."));
+    }
+    function seDeconnecter() { auth.signOut(); }
+
+    // LANCER UN SONDAGE
+    function publierQuestion() {
+        let question = document.getElementById('input-question').value;
+        if(!question) return alert("Saisissez une question !");
+
+        // On écrase l'ancienne question
+        database.ref('sondage_actuel').set({ question: question, timestamp: Date.now() })
+        .then(() => {
+            // Optionnel : on purge les anciennes réponses quand on lance un nouveau sondage
+            database.ref('sondage_reponses').remove();
+            alert("Sondage publié avec succès ! Les agents peuvent y répondre.");
+            document.getElementById('input-question').value = "";
+        })
+        .catch(err => alert("Erreur de publication."));
+    }
+
+    // PURGER LES RÉSULTATS
+    function purgerSondage() {
+        if (confirm("⚠️ Voulez-vous vraiment effacer la question et toutes les réponses de ce sondage ?")) {
+            database.ref('sondage_actuel').remove();
+            database.ref('sondage_reponses').remove();
+        }
+    }
+
+    // CHARGER LES RÉSULTATS EN DIRECT
+    function chargerResultats() {
+        database.ref('sondage_reponses').on('value', function(snapshot) {
+            const tbody = document.getElementById('journal-sondage');
+            tbody.innerHTML = "";
+            
+            let countDispo = 0;
+            let countIndispo = 0;
+            let countPerso = 0;
+
+            snapshot.forEach(function(child) {
+                let data = child.val();
+                
+                let badgeHtml = "";
+                if (data.statut === "Disponible") {
+                    badgeHtml = `<span class="badge badge-dispo">✅ DISPONIBLE</span>`;
+                    countDispo++;
+                } else if (data.statut === "Non disponible") {
+                    badgeHtml = `<span class="badge badge-indispo">❌ NON DISPONIBLE</span>`;
+                    countIndispo++;
+                } else {
+                    badgeHtml = `<span class="badge badge-custom">💬 RÉPONSE LIBRE</span><span class="custom-text">"${data.details}"</span>`;
+                    countPerso++;
+                }
+
+                let row = `<tr>
+                    <td style="color:#555; font-weight:bold;">${data.heure}</td>
+                    <td style="font-weight:bold; font-size:15px;">${data.nom}</td>
+                    <td>${badgeHtml}</td>
+                </tr>`;
+                
+                tbody.innerHTML = row + tbody.innerHTML; // Ajout en haut
+            });
+
+            // Affichage des statistiques
+            document.getElementById('compteurs').innerHTML = 
+                `<span style="color: #008941">Dispo: ${countDispo}</span> &nbsp;|&nbsp; 
+                 <span style="color: #e1000f">Indispo: ${countIndispo}</span> &nbsp;|&nbsp; 
+                 <span style="color: #000091">Autres: ${countPerso}</span>`;
+        });
+    }
+</script>
+</body>
+</html>

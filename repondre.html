@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sondage COZ Sud-Est</title>
+    <style>
+        :root {
+            --marianne-blue: #000091;
+            --marianne-red: #e1000f;
+            --marianne-green: #008941;
+            --dark-grey: #161616;
+            --light-grey: #f6f6f6;
+        }
+        body { font-family: "Marianne", -apple-system, sans-serif; text-align: center; background-color: #ffffff; margin: 0; color: var(--dark-grey); }
+        .bbr-top { height: 6px; background: linear-gradient(90deg, var(--marianne-blue) 33.33%, #ffffff 33.33%, #ffffff 66.66%, var(--marianne-red) 66.66%); border-bottom: 1px solid #e0e0e0; }
+        .app-container { max-width: 450px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+        .bloc-marque { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .bloc-marque img { height: 60px; width: 60px; border-radius: 50%; object-fit: cover; }
+        .coz-title { color: var(--marianne-blue); font-size: 15px; font-weight: 800; margin: 0; text-transform: uppercase; text-align: left; border-left: 2px solid var(--marianne-blue); padding-left: 10px;}
+        
+        .zone-question { background-color: var(--marianne-blue); color: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,145,0.2); }
+        .zone-question h2 { margin: 0; font-size: 18px; font-weight: 800; }
+
+        input[type="text"], textarea { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px; border: 2px solid #cecece; border-radius: 4px; font-weight: bold; background-color: var(--light-grey); margin-bottom: 15px; outline: none; transition: 0.2s; font-family: inherit;}
+        input[type="text"]:focus, textarea:focus { border-color: var(--marianne-blue); background-color: #ffffff; }
+        
+        .btn { padding: 16px; font-size: 16px; border-radius: 4px; border: none; color: white; font-weight: bold; cursor: pointer; display: block; width: 100%; margin-bottom: 10px; text-transform: uppercase; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-dispo { background-color: var(--marianne-green); }
+        .btn-indispo { background-color: var(--marianne-red); }
+        .btn-custom { background-color: var(--marianne-blue); }
+
+        .custom-section { margin-top: 25px; border-top: 2px dashed #eee; padding-top: 20px; }
+        
+        .msg-succes { display: none; background: #f0fdf4; color: #166534; padding: 25px; border-radius: 8px; border: 2px solid #bbf7d0; margin-top: 20px; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+<div class="bbr-top"></div>
+<div class="app-container">
+    
+    <div class="bloc-marque">
+        <img src="logo-coz.png" alt="Logo COZ">
+        <h1 class="coz-title">CENTRE OPÉRATIONNEL ZONAL<br>SUD-EST</h1>
+    </div>
+
+    <div id="zone-sondage">
+        <div class="zone-question">
+            <h2 id="texte-question">Chargement de la question...</h2>
+        </div>
+
+        <input type="text" id="nom" placeholder="VOTRE NOM (Ex: SGT DUPONT)">
+        
+        <button class="btn btn-dispo" onclick="envoyerSondage('Disponible', '')">✅ DISPONIBLE</button>
+        <button class="btn btn-indispo" onclick="envoyerReponseSondage('Non disponible', '')">❌ NON DISPONIBLE</button>
+
+        <div class="custom-section">
+            <p style="font-size: 13px; font-weight: bold; color: #555; text-align: left; text-transform: uppercase; margin-bottom: 10px;">Ou rédigez une réponse libre :</p>
+            <textarea id="reponse-libre" rows="3" placeholder="Saisissez votre réponse détaillée ici..."></textarea>
+            <button class="btn btn-custom" onclick="envoyerSondage('Personnalisée', document.getElementById('reponse-libre').value)">📩 ENVOYER RÉPONSE LIBRE</button>
+        </div>
+    </div>
+
+    <div id="message-confirmation" class="msg-succes">
+        <h2 style="margin-top: 0; font-size: 20px;">✅ Réponse enregistrée</h2>
+        <p style="font-weight: bold; margin-bottom: 0;">Le COZ a bien reçu votre retour.<br>Merci de votre réactivité.</p>
+    </div>
+
+</div>
+
+<script>
+    // Configuration Firebase récupérée de votre système existant
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3Ris9pwHSnvpXGSgIDIUztC05Apg47jU",
+        authDomain: "alerte-spve-coz-se.firebaseapp.com",
+        databaseURL: "https://alerte-spve-coz-se-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "alerte-spve-coz-se",
+        storageBucket: "alerte-spve-coz-se.firebasestorage.app",
+        messagingSenderId: "681070251949",
+        appId: "1:681070251949:web:1ddec547160937a9f29b24"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Récupérer le nom s'il a déjà été tapé par le passé
+    window.onload = function() {
+        let nomSauvegarde = localStorage.getItem("nomPompier");
+        if (nomSauvegarde) document.getElementById('nom').value = nomSauvegarde;
+    };
+
+    // Écouter la question en direct depuis la base de données
+    database.ref('sondage_actuel').on('value', (snap) => {
+        let data = snap.val();
+        if (data && data.question) {
+            document.getElementById('texte-question').innerText = data.question;
+        } else {
+            document.getElementById('texte-question').innerText = "Aucun sondage en cours.";
+        }
+    });
+
+    // Fonction d'envoi de la réponse
+    function envoyerSondage(statut, textePersonnalise) {
+        let nom = document.getElementById('nom').value;
+        if(!nom) { 
+            document.getElementById('nom').style.borderColor = "#e1000f";
+            setTimeout(() => { document.getElementById('nom').style.borderColor = "#cecece"; }, 1500);
+            return; 
+        }
+        
+        // Si c'est une réponse personnalisée mais que le champ est vide
+        if (statut === 'Personnalisée' && !textePersonnalise.trim()) {
+            document.getElementById('reponse-libre').style.borderColor = "#e1000f";
+            setTimeout(() => { document.getElementById('reponse-libre').style.borderColor = "#cecece"; }, 1500);
+            return;
+        }
+
+        localStorage.setItem("nomPompier", nom);
+        let heure = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        
+        database.ref('sondage_reponses').push({ 
+            nom: nom, 
+            statut: statut, 
+            details: textePersonnalise,
+            heure: heure 
+        })
+        .then(() => {
+            document.getElementById('zone-sondage').style.display = 'none';
+            document.getElementById('message-confirmation').style.display = 'block';
+            window.scrollTo(0, 0);
+        })
+        .catch((err) => alert("Erreur de connexion : " + err));
+    }
+
+    // Alias pour le bouton Indisponible (correction d'appel HTML)
+    function envoyerReponseSondage(statut, texte) { envoyerSondage(statut, texte); }
+</script>
+</body>
+</html>
