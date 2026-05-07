@@ -39,9 +39,21 @@
         .creation-card input { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px; border: 2px solid var(--border-color); border-radius: 4px; outline: none; background: #f9f9f9; }
         .creation-card input:focus { border-color: var(--marianne-blue); background: white; }
         
-        /* Bouton relifté façon "Alerte Tchap" */
         .btn-lancer { background-color: var(--marianne-red); color: white; padding: 15px 30px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; height: fit-content; align-self: flex-end; white-space: nowrap; transition: 0.2s;}
         .btn-lancer:hover { background-color: #b3000c; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(225,0,15,0.2); }
+
+        /* BANDEAU QUESTION ACTIVE */
+        .active-question-box {
+            background-color: var(--marianne-blue);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none; /* Caché si pas de sondage */
+            box-shadow: 0 4px 12px rgba(0,0,145,0.2);
+        }
+        .active-question-box h4 { margin: 0; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; opacity: 0.8; margin-bottom: 5px; }
+        .active-question-box p { margin: 0; font-size: 18px; font-weight: 800; }
 
         /* TABLEAU DES RÉSULTATS */
         .table-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -99,6 +111,11 @@
             <button class="btn-lancer" onclick="publierQuestion()">📢 LANCER & PARTAGER (TCHAP)</button>
         </div>
 
+        <div id="banner-question" class="active-question-box">
+            <h4>Sondage actif sur le terrain :</h4>
+            <p id="display-active-question"></p>
+        </div>
+
         <div class="table-container">
             <div class="table-header">
                 <h3>📊 Résultats en direct</h3>
@@ -113,14 +130,13 @@
                     </tr>
                 </thead>
                 <tbody id="journal-sondage">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>
 </div>
 
 <script>
-    // Configuration Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyD3Ris9pwHSnvpXGSgIDIUztC05Apg47jU",
         authDomain: "alerte-spve-coz-se.firebaseapp.com",
@@ -135,12 +151,12 @@
     const database = firebase.database();
     const auth = firebase.auth(); 
 
-    // GESTION CONNEXION
     auth.onAuthStateChanged((user) => {
         if (user) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
             chargerResultats();
+            ecouterQuestionActive(); // Lancement de l'écoute de l'intitulé
         } else {
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('app-content').style.display = 'none';
@@ -154,47 +170,44 @@
     }
     function seDeconnecter() { auth.signOut(); }
 
-    // --- FONCTION DE PARTAGE TCHAP ---
     function diffuserVersTchap(texte) {
-        // 1. Copie automatique du texte dans le presse-papier
         navigator.clipboard.writeText(texte).then(() => {
-            // 2. Notification visuelle
             const confirmation = confirm("📋 SONDAGE COPIÉ !\n\nLe texte du sondage a été copié dans votre presse-papier.\n\nVoulez-vous ouvrir Tchap pour le coller dans votre salon ?");
-            
-            // 3. Redirection vers Tchap
-            if (confirmation) {
-                window.open("https://www.tchap.gouv.fr/", "_blank");
-            }
-        }).catch(err => {
-            alert("Erreur lors de la copie du message. Veuillez le copier manuellement.");
+            if (confirmation) { window.open("https://www.tchap.gouv.fr/", "_blank"); }
         });
     }
 
-    // --- LANCER UN SONDAGE ---
     function publierQuestion() {
         let question = document.getElementById('input-question').value;
         if(!question) return alert("Saisissez une question !");
 
-        // On écrase l'ancienne question dans Firebase
         database.ref('sondage_actuel').set({ question: question, timestamp: Date.now() })
         .then(() => {
-            // On purge les anciennes réponses
             database.ref('sondage_reponses').remove();
-            
-            // Formatage du message pour Tchap
             let lienApp = "https://vernetbenoit-pixel.github.io/alerte-cozSE/repondre.html";
             let texteMessage = `🚨📊 NOUVEAU SONDAGE COZ 📊🚨\n\n⚠️ QUESTION : ${question}\n\n👉 RÉPONDEZ DIRECTEMENT ICI :\n${lienApp}`;
-            
-            // Appel de la fonction de diffusion
             diffuserVersTchap(texteMessage);
-            
-            // On vide la case de saisie
             document.getElementById('input-question').value = "";
         })
         .catch(err => alert("Erreur de publication."));
     }
 
-    // PURGER LES RÉSULTATS
+    // NOUVELLE FONCTION : Écoute l'intitulé du sondage en direct
+    function ecouterQuestionActive() {
+        database.ref('sondage_actuel').on('value', (snap) => {
+            let data = snap.val();
+            const banner = document.getElementById('banner-question');
+            const textDisplay = document.getElementById('display-active-question');
+            
+            if (data && data.question) {
+                textDisplay.innerText = data.question;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        });
+    }
+
     function purgerSondage() {
         if (confirm("⚠️ Voulez-vous vraiment effacer la question et toutes les réponses de ce sondage ?")) {
             database.ref('sondage_actuel').remove();
@@ -202,45 +215,24 @@
         }
     }
 
-    // CHARGER LES RÉSULTATS EN DIRECT
     function chargerResultats() {
         database.ref('sondage_reponses').on('value', function(snapshot) {
             const tbody = document.getElementById('journal-sondage');
             tbody.innerHTML = "";
-            
-            let countDispo = 0;
-            let countIndispo = 0;
-            let countPerso = 0;
+            let countDispo = 0, countIndispo = 0, countPerso = 0;
 
             snapshot.forEach(function(child) {
                 let data = child.val();
-                
                 let badgeHtml = "";
-                if (data.statut === "Disponible") {
-                    badgeHtml = `<span class="badge badge-dispo">✅ DISPONIBLE</span>`;
-                    countDispo++;
-                } else if (data.statut === "Non disponible") {
-                    badgeHtml = `<span class="badge badge-indispo">❌ NON DISPONIBLE</span>`;
-                    countIndispo++;
-                } else {
-                    badgeHtml = `<span class="badge badge-custom">💬 RÉPONSE LIBRE</span><span class="custom-text">"${data.details}"</span>`;
-                    countPerso++;
-                }
+                if (data.statut === "Disponible") { badgeHtml = `<span class="badge badge-dispo">✅ DISPONIBLE</span>`; countDispo++; }
+                else if (data.statut === "Non disponible") { badgeHtml = `<span class="badge badge-indispo">❌ NON DISPONIBLE</span>`; countIndispo++; }
+                else { badgeHtml = `<span class="badge badge-custom">💬 RÉPONSE LIBRE</span><span class="custom-text">"${data.details}"</span>`; countPerso++; }
 
-                let row = `<tr>
-                    <td style="color:#555; font-weight:bold;">${data.heure}</td>
-                    <td style="font-weight:bold; font-size:15px;">${data.nom}</td>
-                    <td>${badgeHtml}</td>
-                </tr>`;
-                
-                tbody.innerHTML = row + tbody.innerHTML; // Ajout en haut
+                let row = `<tr><td style="color:#555; font-weight:bold;">${data.heure}</td><td style="font-weight:bold; font-size:15px;">${data.nom}</td><td>${badgeHtml}</td></tr>`;
+                tbody.innerHTML = row + tbody.innerHTML;
             });
 
-            // Affichage des statistiques
-            document.getElementById('compteurs').innerHTML = 
-                `<span style="color: #008941">Dispo: ${countDispo}</span> &nbsp;|&nbsp; 
-                 <span style="color: #e1000f">Indispo: ${countIndispo}</span> &nbsp;|&nbsp; 
-                 <span style="color: #000091">Autres: ${countPerso}</span>`;
+            document.getElementById('compteurs').innerHTML = `<span style="color: #008941">Dispo: ${countDispo}</span> &nbsp;|&nbsp; <span style="color: #e1000f">Indispo: ${countIndispo}</span> &nbsp;|&nbsp; <span style="color: #000091">Autres: ${countPerso}</span>`;
         });
     }
 </script>
